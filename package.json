@@ -31,7 +31,6 @@
   },
   "dependencies": {
     "cookie": "^0.2.4",
-    "format-pem-keys": "^1.0.0",
-    "pan-domain-node": "^0.2.0"
+    "pan-domain-public-keys": "^1.0.1"
   }
 }

@@ -4,6 +4,7 @@ import httpsModule from 'https';
 import {parse as parseQueryString} from 'querystring';
 import {base64toPEM} from 'format-pem-keys';
 import {STAGE} from './environment';
+import {getPEM} from 'pan-domain-public-keys';
 
 export function handler (events, context, callback) {
 	handleEvents({events, callback, https: httpsModule, logger: console,
@@ -11,7 +12,7 @@ export function handler (events, context, callback) {
 }
 
 export function handleEvents ({events, callback, https, logger, crypto, now}) {
-	fetchPublicKey({https, path: publicKeyPath(STAGE), logger})
+	getPEM(STAGE, https)
 	.then(key => extractUserFromCookie(events.authorizationToken, key, crypto))
 	.then(user => validateUser(user, now))
 	.then(user => {
@@ -24,36 +25,6 @@ export function handleEvents ({events, callback, https, logger, crypto, now}) {
 	.catch(ex => {
 		logger.error(ex);
 		callback(null, policy('', 'Deny', events.methodArn));
-	});
-}
-
-function publicKeyPath (stage) {
-	return 'https://s3-eu-west-1.amazonaws.com/pan-domain-auth-settings/' + (stage === 'PROD' ?
-		'gutools.co.uk.settings.public' :
-		(stage.toLowerCase()  + '.dev-gutools.co.uk.settings.public')
-	);
-}
-
-function fetchPublicKey ({https, path, logger}) {
-	logger.log('Getting public key from ', path);
-	return new Promise ((resolve, reject) => {
-		https.get(path, res => {
-			const data = [];
-			res.on('data', chunk => data.push(chunk.toString('utf8')));
-			res.on('end', () => {
-				const responseText = data.join('');
-				if (res.statusCode === 200) {
-					resolve(responseText.replace(/^publicKey=/i, ''));
-				} else {
-					// Response might be xml
-					const match = responseText.match(/<message>(.*)<\/message>/i);
-					const error = new Error(match ? match[1] : 'Invalid public key response');
-					error.responseText = responseText;
-					reject(error);
-				}
-			});
-			res.on('error', error => reject(new Error(error)));
-		});
 	});
 }
 
