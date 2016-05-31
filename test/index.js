@@ -1,3 +1,5 @@
+'use strict'; //eslint-disable-line strict
+
 const tap = require('tap');
 const lambda = require('../tmp/lambda/index');
 const EventEmitter = require('events');
