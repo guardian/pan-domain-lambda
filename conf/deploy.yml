@@ -1,0 +1,33 @@
+defaultStacks:
+    - cms-fronts
+packages:
+    static:
+        type: aws-s3
+        data:
+            bucket: pan-domain-lambda-dist
+            cacheControl: "public, max-age=315360000"
+            prefixPackage: false
+            prefixStack: false
+            prefixStage: true
+            publicReadAcl: false
+    lambda:
+        type: aws-lambda
+        data:
+            functions:
+                CODE:
+                    name: pan-domain-lambda-CODE-Lambda-EY6RANAESX82
+                    filename: artifact.zip
+                PROD:
+                    name: pan-domain-lambda-PROD-Lambda-AHG6279NB84Y
+                    filename: artifact.zip
+recipes:
+    upload:
+        actionsBeforeApp:
+            - static.uploadStaticFiles
+    lambda:
+        actionsBeforeApp:
+            - lambda.updateLambda
+    default:
+        depends:
+            - upload
+            - lambda
