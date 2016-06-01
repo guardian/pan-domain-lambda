@@ -10,16 +10,6 @@ class EmitterError extends EventEmitter {
 		process.nextTick(() => this.emit('error', 'emitting an error'));
 	}
 }
-class EmitterInvalid extends EventEmitter {
-	constructor () {
-		super();
-		this.statusCode = 403;
-		process.nextTick(() => {
-			this.emit('data', '<Error><Message>XML error</Message></Error>');
-			this.emit('end');
-		});
-	}
-}
 class EmitterResponse extends EventEmitter {
 	constructor () {
 		super();
@@ -29,31 +19,6 @@ class EmitterResponse extends EventEmitter {
 			this.emit('end');
 		});
 	}
-}
-const cryptoInvalid = {
-	createVerify () {
-		return {
-			update () {
-				return {
-					verify () { return false; }
-				};
-			}
-		};
-	}
-};
-const cryptoValid = {
-	createVerify () {
-		return {
-			update () {
-				return {
-					verify () { return true; }
-				};
-			}
-		};
-	}
-};
-function cookie (data) {
-	return 'gutoolsAuth-assym=' + (new Buffer(data, 'utf8')).toString('base64') + '.signature';
 }
 
 tap.test('fails when fetching a key emits an error', test => {
@@ -80,32 +45,8 @@ tap.test('fails when fetching a key emits an error', test => {
 	});
 });
 
-tap.test('fails when fetching a key return invalid response', function (test) {
-	test.plan(3);
-
-	lambda.handleEvents({
-		events: {},
-		https: {
-			get (path, callback) {
-				callback(new EmitterInvalid());
-			}
-		},
-		logger: {
-			log () {},
-			error (err) {
-				test.type(err, Error);
-				test.equal(err.message, 'XML error');
-			}
-		},
-		callback: (err, policy) => {
-			test.equal(policy.policyDocument.Statement[0].Effect, 'Deny');
-			test.end();
-		}
-	});
-});
-
-tap.test('fails when the cookie is missing', function (test) {
-	test.plan(3);
+tap.test('fails when the cookie is not set', function (test) {
+	test.plan(5);
 
 	lambda.handleEvents({
 		events: {},
@@ -118,10 +59,14 @@ tap.test('fails when the cookie is missing', function (test) {
 			log () {},
 			error (err) {
 				test.type(err, Error);
-				test.match(err.message, /missing authorization/i);
+				test.match(err.message, /fail validation/i);
 			}
 		},
-		crypto: cryptoInvalid,
+		validate (cookie, key) {
+			test.equal(cookie, '');
+			test.match(key, /BEGIN PUBLIC KEY[\s\S]*abcde/i);
+			return Promise.reject(new Error('fail validation'));
+		},
 		callback: (err, policy) => {
 			test.equal(policy.policyDocument.Statement[0].Effect, 'Deny');
 			test.end();
@@ -129,11 +74,11 @@ tap.test('fails when the cookie is missing', function (test) {
 	});
 });
 
-tap.test('fails validating the signature', function (test) {
-	test.plan(3);
+tap.test('fails validating a cookie', function (test) {
+	test.plan(4);
 
 	lambda.handleEvents({
-		events: { authorizationToken: 'token' },
+		events: { authorizationToken: 'gutoolsAuth-assym=base64.signature' },
 		https: {
 			get (path, callback) {
 				callback(new EmitterResponse());
@@ -143,114 +88,13 @@ tap.test('fails validating the signature', function (test) {
 			log () {},
 			error (err) {
 				test.type(err, Error);
-				test.match(err.message, /invalid authorization/i);
+				test.match(err.message, /fail validation/i);
 			}
 		},
-		crypto: cryptoInvalid,
-		callback: (err, policy) => {
-			test.equal(policy.policyDocument.Statement[0].Effect, 'Deny');
-			test.end();
-		}
-	});
-});
-
-tap.test('fails validating an expired cookie', function (test) {
-	test.plan(3);
-
-	lambda.handleEvents({
-		events: { authorizationToken: cookie('expires=Thu May 26 2016 16:00:00 GMT') },
-		now: new Date('Thu May 26 2016 17:00:00 GMT'),
-		https: {
-			get (path, callback) {
-				callback(new EmitterResponse());
-			}
+		validate (cookie) {
+			test.equal(cookie, 'base64.signature');
+			return Promise.reject(new Error('fail validation'));
 		},
-		logger: {
-			log () {},
-			error (err) {
-				test.type(err, Error);
-				test.match(err.message, /authorisation has expired/i);
-			}
-		},
-		crypto: cryptoValid,
-		callback: (err, policy) => {
-			test.equal(policy.policyDocument.Statement[0].Effect, 'Deny');
-			test.end();
-		}
-	});
-});
-
-tap.test('fails validating an invalid date', function (test) {
-	test.plan(3);
-
-	lambda.handleEvents({
-		events: { authorizationToken: cookie('expires=') },
-		now: new Date('Thu May 26 2016 17:00:00 GMT'),
-		https: {
-			get (path, callback) {
-				callback(new EmitterResponse());
-			}
-		},
-		logger: {
-			log () {},
-			error (err) {
-				test.type(err, Error);
-				test.match(err.message, /authorisation has expired/i);
-			}
-		},
-		crypto: cryptoValid,
-		callback: (err, policy) => {
-			test.equal(policy.policyDocument.Statement[0].Effect, 'Deny');
-			test.end();
-		}
-	});
-});
-
-tap.test('fails validating an invalid user email', function (test) {
-	test.plan(3);
-
-	lambda.handleEvents({
-		events: { authorizationToken: cookie('expires=Thu May 26 2016 18:00:00 GMT&email=someone@gmail.com') },
-		now: new Date('Thu May 26 2016 17:00:00 GMT'),
-		https: {
-			get (path, callback) {
-				callback(new EmitterResponse());
-			}
-		},
-		logger: {
-			log () {},
-			error (err) {
-				test.type(err, Error);
-				test.match(err.message, /valid guardian user/i);
-			}
-		},
-		crypto: cryptoValid,
-		callback: (err, policy) => {
-			test.equal(policy.policyDocument.Statement[0].Effect, 'Deny');
-			test.end();
-		}
-	});
-});
-
-tap.test('fails validating an multifactor is disabled', function (test) {
-	test.plan(3);
-
-	lambda.handleEvents({
-		events: { authorizationToken: cookie('expires=Thu May 26 2016 18:00:00 GMT&email=someone@guardian.co.uk') },
-		now: new Date('Thu May 26 2016 17:00:00 GMT'),
-		https: {
-			get (path, callback) {
-				callback(new EmitterResponse());
-			}
-		},
-		logger: {
-			log () {},
-			error (err) {
-				test.type(err, Error);
-				test.match(err.message, /2FA turned on/i);
-			}
-		},
-		crypto: cryptoValid,
 		callback: (err, policy) => {
 			test.equal(policy.policyDocument.Statement[0].Effect, 'Deny');
 			test.end();
@@ -262,14 +106,7 @@ tap.test('validates the user correctly', function (test) {
 	test.plan(2);
 
 	lambda.handleEvents({
-		events: { authorizationToken: cookie([
-			'expires=Thu May 26 2016 18:00:00 GMT',
-			'email=someone@guardian.co.uk',
-			'multifactor=true',
-			'firstName=Jon',
-			'lastName=Doe'
-		].join('&')) },
-		now: new Date('Thu May 26 2016 17:00:00 GMT'),
+		events: { authorizationToken: 'gutoolsAuth-assym=base64.signature' },
 		https: {
 			get (path, callback) {
 				callback(new EmitterResponse());
@@ -279,7 +116,13 @@ tap.test('validates the user correctly', function (test) {
 			log () {},
 			error () {}
 		},
-		crypto: cryptoValid,
+		validate () {
+			return Promise.resolve({
+				firstName: 'Jon',
+				lastName: 'Doe',
+				email: 'someone@guardian.co.uk'
+			});
+		},
 		callback: (err, policy) => {
 			test.equal(policy.principalId, 'Jon Doe <someone@guardian.co.uk>');
 			test.equal(policy.policyDocument.Statement[0].Effect, 'Allow');
