@@ -1,0 +1,13 @@
+regions: [eu-west-1]
+stacks: [cms-fronts]
+
+deployments:
+    panDomainLambda:
+	    type: aws-lambda
+		contentDirectory: pan-domain-lambda
+        parameters:
+		    bucket: pan-domain-lambda-dist
+			prefix-stack: false
+			fileName: pan-domain-lambda.zip
+			functionNames:
+				- "pan-domain-lambda-"
