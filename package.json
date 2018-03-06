@@ -1,5 +1,5 @@
 {
-  "name": "pan-domain-lamda",
+  "name": "panDomaiLamda",
   "version": "1.0.0",
   "description": "Custom lambda authenticator using pan-domain for API Gateway",
   "projectName": "cms-fronts::pan-domain-lamda",
