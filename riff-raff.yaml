@@ -3,11 +3,11 @@ stacks: [cms-fronts]
 
 deployments:
     panDomainLambda:
-	    type: aws-lambda
-		contentDirectory: panDomainLambda
+        type: aws-lambda
+        contentDirectory: panDomainLambda
         parameters:
-		    bucket: panDomainLambda-dist
-			prefix-stack: false
-			fileName: panDomainLambda.zip
-			functionNames:
-				- "pan-domain-lambda-"
+            bucket: panDomainLambda-dist
+            prefix-stack: false
+            fileName: panDomainLambda.zip
+            functionNames:
+                - "pan-domain-lambda-"
