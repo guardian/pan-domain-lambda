@@ -1,0 +1,17 @@
+regions: [eu-west-1]
+stacks: [cms-fronts]
+
+deployments:
+    pan-domain-lambda:
+        type: aws-lambda
+        contentDirectory: pan-domain-lamda
+        parameters:
+            bucket: pan-domain-lambda-dist
+            fileName: pan-domain-lamda.zip
+            functions:
+                CODE:
+                    filename: pan-domain-lamda.zip
+                    name: pan-domain-lambda-CODE-Lambda-EY6RANAESX82
+                PROD:
+                    filename: pan-domain-lambda.zip
+                    name: pan-domain-lambda-PROD-Lambda-AHG6279NB84Y

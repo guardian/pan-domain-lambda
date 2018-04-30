@@ -55,12 +55,7 @@ Resources:
             Code:
                 S3Bucket:
                     Ref: DeployBucket
-                S3Key:
-                    "Fn::Join":
-                        - "/"
-                        -
-                            - Ref: Stage
-                            - artifact.zip
+                S3Key: !Sub '${Stage}/pan-domain-lamda/pan-domain-lamda.zip'
             Description: Validate user cookie
             Handler: index.handler
             MemorySize: 128
