@@ -13,5 +13,5 @@ deployments:
                     filename: pan-domain-lamda.zip
                     name: pan-domain-lambda-CODE-Lambda-EY6RANAESX82
                 PROD:
-                    filename: pan-domain-lambda.zip
+                    filename: pan-domain-lamda.zip
                     name: pan-domain-lambda-PROD-Lambda-AHG6279NB84Y
