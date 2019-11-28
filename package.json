@@ -11,17 +11,19 @@
   "isAwsLambda": true,
   "riffraffFile": "./riff-raff.yaml",
   "scripts": {
-    "pretest": "gulp lint",
-    "test": "gulp compile && tap test",
-    "deploy": "gulp deploy && VERBOSE=true ARTEFACT_PATH=$PWD riffraff-artefact",
-    "watch": "nodemon --watch src --watch test --exec 'npm test'"
+    "lint": "eslint src test",
+    "lint-fix": "eslint --fix src test",
+    "test": "npm run lint && npm run compile && tap test",
+    "deploy": "VERBOSE=true ARTEFACT_PATH=$PWD riffraff-artefact",
+    "watch": "nodemon --watch src --watch test --exec 'npm test'",
+    "compile": "rollup -c rollup.config.js"
   },
   "devDependencies": {
     "aws-sdk": "^2.3.17",
     "babel-preset-es2015-rollup": "^1.1.1",
+    "eslint": "^6.7.1",
     "exec-chainable": "0.0.3",
-    "gulp": "^3.9.1",
-    "gulp-eslint": "^2.0.0",
+    "nodemon": "^2.0.1",
     "node-riffraff-artefact": "^2.0.1",
     "rollup": "^0.27.0",
     "rollup-plugin-babel": "^2.5.0",
