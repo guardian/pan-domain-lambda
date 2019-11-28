@@ -12,6 +12,7 @@
   "riffraffFile": "./riff-raff.yaml",
   "scripts": {
     "lint": "eslint src test",
+    "lint-fix": "eslint --fix src test",
     "test": "npm run lint && npm run compile && tap test",
     "deploy": "VERBOSE=true ARTEFACT_PATH=$PWD riffraff-artefact",
     "watch": "nodemon --watch src --watch test --exec 'npm test'",
