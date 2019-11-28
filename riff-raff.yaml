@@ -4,14 +4,14 @@ stacks: [cms-fronts]
 deployments:
     pan-domain-lambda:
         type: aws-lambda
-        contentDirectory: pan-domain-lamda
+        contentDirectory: pan-domain-lambda
         parameters:
             bucket: pan-domain-lambda-dist
-            fileName: pan-domain-lamda.zip
+            fileName: pan-domain-lambda.zip
             functions:
                 CODE:
-                    filename: pan-domain-lamda.zip
+                    filename: pan-domain-lambda.zip
                     name: pan-domain-lambda-CODE-Lambda-EY6RANAESX82
                 PROD:
-                    filename: pan-domain-lamda.zip
+                    filename: pan-domain-lambda.zip
                     name: pan-domain-lambda-PROD-Lambda-AHG6279NB84Y
