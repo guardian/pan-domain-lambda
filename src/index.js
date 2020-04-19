@@ -1,5 +1,5 @@
 import {parse as parseCookies} from 'cookie';
-import {PanDomainAuthentication,guardianValidation} from '@guardian/pan-domain-node'; 
+import {guardianValidation, PanDomainAuthentication} from '@guardian/pan-domain-node'; 
 import {SETTINGS_FILE, REGION} from './environment';
 
 export function handler (events, context, callback) {
