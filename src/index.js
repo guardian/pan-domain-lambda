@@ -1,6 +1,4 @@
 import {parse as parseCookies} from 'cookie';
-// eslint-disable-next-line no-unused-vars
-import {AuthenticationStatus} from '@guardian/pan-domain-node';
 import {guardianValidation, PanDomainAuthentication} from '@guardian/pan-domain-node'; 
 import {SETTINGS_FILE, REGION} from './environment';
 

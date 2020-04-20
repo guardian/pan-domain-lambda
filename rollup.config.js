@@ -1,15 +1,15 @@
-import nodeResolve from 'rollup-plugin-node-resolve';
-import commonjs from 'rollup-plugin-commonjs';
-import babel from 'rollup-plugin-babel';
+import nodeResolve from '@rollup/plugin-node-resolve';
+import commonjs from '@rollup/plugin-commonjs';
 
 export default {
-	entry: 'src/index.js',
+	input: 'src/index.js',
 	plugins: [
-		babel(),
 		nodeResolve({ jsnext: true }),
 		commonjs()
 	],
-	format: 'cjs',
-	dest: 'tmp/lambda/index.js',
+	output: {
+		format: 'cjs',
+		file: 'tmp/lambda/index.js'
+	},
 	external: ['aws-sdk']
 };
