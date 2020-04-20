@@ -9,7 +9,8 @@ tap.test('fails when panda verify fails', test => {
 	lambda.handleEvents({
 		events: { authorizationToken: 'gutoolsAuth-assym=base64.signature' },
 		panda: {
-			verify: () => Promise.reject(new Error('a failure in test'))
+			verify: () => Promise.reject(new Error('a failure in test')),
+			stop: () => {}
 		},
 		logger: {
 			log () {},
@@ -38,7 +39,8 @@ tap.test('validates the user correctly', function (test) {
 					lastName: 'Doe',
 					email: 'someone@guardian.co.uk'
 				}
-			})
+			}),
+			stop: () => {}
 		},
 		logger: {
 			log () {},

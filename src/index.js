@@ -1,4 +1,3 @@
-import {parse as parseCookies} from 'cookie';
 import {guardianValidation, PanDomainAuthentication} from '@guardian/pan-domain-node'; 
 import {SETTINGS_FILE, REGION} from './environment';
 
@@ -8,12 +7,14 @@ export function handler (events, context, callback) {
 }
 
 export function handleEvents ({events, callback, panda, logger}) {
-	console.log(events.authorizationToken || '');
-	const cookie = getPandaCookie(events.authorizationToken || '');
+	const cookie = events.authorizationToken || '';
 
 	panda.verify(cookie)
 	.then(({ status, user }) => {
 		if (status === 'Authorised') {
+			// TODO MRB: remove once @guardian/pan-domain-node supports an API not including the refresher
+			panda.stop();
+
 			callback(null, policy(
 				`${user.firstName} ${user.lastName} <${user.email}>`,
 				'Allow',
@@ -25,13 +26,11 @@ export function handleEvents ({events, callback, panda, logger}) {
 	})
 	.catch(ex => {
 		logger.error(ex);
+
+		// TODO MRB: remove once @guardian/pan-domain-node supports an API not including the refresher
+		panda.stop();
 		callback(null, policy('', 'Deny', events.methodArn));
 	});
-}
-
-function getPandaCookie (data) {
-	const cookies = parseCookies(data);
-	return cookies['gutoolsAuth-assym'] || '';
 }
 
 function policy (principal, effect, arn) {
