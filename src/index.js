@@ -1,34 +1,36 @@
-import {parse as parseCookies} from 'cookie';
-import httpsModule from 'https';
-import {getPEM} from 'pan-domain-public-keys';
-import validateUser from 'pan-domain-validate-user';
-import {STAGE} from './environment';
+import {guardianValidation, PanDomainAuthentication} from '@guardian/pan-domain-node'; 
+import {SETTINGS_FILE, REGION} from './environment';
 
 export function handler (events, context, callback) {
-	handleEvents({events, callback, https: httpsModule, logger: console, validate: validateUser});
+	const panda = new PanDomainAuthentication('gutoolsAuth-assym', REGION, 'pan-domain-auth-settings', SETTINGS_FILE, guardianValidation);
+	handleEvents({events, callback, panda, logger: console});
 }
 
-export function handleEvents ({events, callback, https, logger, validate}) {
-	const cookie = getPandaCookie(events.authorizationToken || '');
+export function handleEvents ({events, callback, panda, logger}) {
+	const cookie = events.authorizationToken || '';
 
-	getPEM(STAGE, https)
-	.then(key => validate(cookie, key))
-	.then(user => {
-		callback(null, policy(
-			`${user.firstName} ${user.lastName} <${user.email}>`,
-			'Allow',
-			events.methodArn
-		));
+	panda.verify(cookie)
+	.then(({ status, user }) => {
+		if (status === 'Authorised') {
+			// TODO MRB: remove once @guardian/pan-domain-node supports an API not including the refresher
+			panda.stop();
+
+			callback(null, policy(
+				`${user.firstName} ${user.lastName} <${user.email}>`,
+				'Allow',
+				events.methodArn
+			));
+		} else {
+			throw new Error('Authorisation failed ' + status);
+		}
 	})
 	.catch(ex => {
 		logger.error(ex);
+
+		// TODO MRB: remove once @guardian/pan-domain-node supports an API not including the refresher
+		panda.stop();
 		callback(null, policy('', 'Deny', events.methodArn));
 	});
-}
-
-function getPandaCookie (data) {
-	const cookies = parseCookies(data);
-	return cookies['gutoolsAuth-assym'] || '';
 }
 
 function policy (principal, effect, arn) {
