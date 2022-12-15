@@ -6,7 +6,6 @@ deployments:
         type: aws-lambda
         contentDirectory: pan-domain-lambda
         parameters:
-            bucket: pan-domain-lambda-dist
             fileName: pan-domain-lambda.zip
             functions:
                 CODE:
